@@ -13,5 +13,45 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\Allocator">
+      <UniqueIdentifier>{c8fbf46a-6e0a-440c-ba60-29a4cda7fd56}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Collector">
+      <UniqueIdentifier>{0f7e0bcb-d3fc-4c40-af7b-d359d3af605d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shared">
+      <UniqueIdentifier>{529b8289-483c-47ca-ae28-4e438aa7328e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Allocator">
+      <UniqueIdentifier>{31e3c0d5-0ead-49ad-960f-923828576384}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Collector">
+      <UniqueIdentifier>{23f4376d-db99-49e9-a2c1-b4b8dd362110}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="allocator.cpp">
+      <Filter>Source Files\Allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="collector.cpp">
+      <Filter>Source Files\Collector</Filter>
+    </ClCompile>
+    <ClCompile Include="shared.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="allocator.h">
+      <Filter>Header Files\Allocator</Filter>
+    </ClInclude>
+    <ClInclude Include="collector.h">
+      <Filter>Header Files\Collector</Filter>
+    </ClInclude>
+    <ClInclude Include="shared.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
