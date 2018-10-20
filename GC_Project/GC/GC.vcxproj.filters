@@ -19,14 +19,17 @@
     <Filter Include="Header Files\Collector">
       <UniqueIdentifier>{0f7e0bcb-d3fc-4c40-af7b-d359d3af605d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shared">
-      <UniqueIdentifier>{529b8289-483c-47ca-ae28-4e438aa7328e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Allocator">
       <UniqueIdentifier>{31e3c0d5-0ead-49ad-960f-923828576384}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Collector">
       <UniqueIdentifier>{23f4376d-db99-49e9-a2c1-b4b8dd362110}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Shared">
+      <UniqueIdentifier>{7059820b-9acd-46d0-9fa0-eea247c904fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Shared">
+      <UniqueIdentifier>{7eea199a-0749-4c48-aa29-e9bb932ddf18}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -39,8 +42,11 @@
     <ClCompile Include="collector.cpp">
       <Filter>Source Files\Collector</Filter>
     </ClCompile>
+    <ClCompile Include="list.cpp">
+      <Filter>Resource Files</Filter>
+    </ClCompile>
     <ClCompile Include="shared.cpp">
-      <Filter>Shared</Filter>
+      <Filter>Source Files\Shared</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -50,8 +56,14 @@
     <ClInclude Include="collector.h">
       <Filter>Header Files\Collector</Filter>
     </ClInclude>
+    <ClInclude Include="list.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="structs.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
     <ClInclude Include="shared.h">
-      <Filter>Shared</Filter>
+      <Filter>Header Files\Shared</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

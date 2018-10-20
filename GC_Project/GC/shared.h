@@ -1,31 +1,28 @@
+#pragma once
 #include <Windows.h>
 #include <stdlib.h>
+#include "structs.h"
+#include "list.h"
 
 #ifndef SHARED_H
 #define SHARED_H
 
 // Declarations that resolve undefined declaration errors
 struct Heap_manager;
-struct Roots_heap_elem;
-
-// Represents one element of the roots heap
-typedef struct Roots_heap_elem {
-	void* dataPtr;
-	int dataSize;
-	bool mark;
-} ROOT;
 
 // Heap manager
-void* Malloc(int nbytes);
+void* Malloc(struct Heap_manager** hManager, int nbytes);
+void Free(struct Heap_manager** hManager, void* ptr);
 void HeapInit(struct Heap_manager** hManager);
-void AddRoot(struct Heap_manager** hManager, ROOT** newRoot);
 struct Heap_manager* HeapManagerInit();
 
 typedef struct Heap_manager {
-	ROOT* rootHeapStart;
-	int rootHeapSize;
-	void*(*malloc)(int);
-	void(*addRoot)(struct Heap_manager**, ROOT**);
+	char* heapStart;
+	int heapSize;
+	NODE* listOfFree; 
+	NODE* listOfOccupied;
+	void(*free)(struct Heap_manager**, void*);
+	void*(*malloc)(struct Heap_manager**, int);
 } H_MANAGER;
 
 #endif
