@@ -1,13 +1,14 @@
 #include "list.h"
 
-void Add(NODE** root, MEMORY_BLOCK** data)
+// List API for MEMORY BLOCKS
+void ListAdd(NODE** root, MEMORY_BLOCK** data)
 {
 	NODE* newElemPtr = (NODE*)malloc(sizeof(NODE));
-	newElemPtr->blockData = **data;
+	newElemPtr->blockInfo = **data;
 	newElemPtr->next = NULL;
 
 	// Empty list
-	if(*root == NULL)
+	if (*root == NULL)
 	{
 		*root = newElemPtr;
 		return;
@@ -20,20 +21,20 @@ void Add(NODE** root, MEMORY_BLOCK** data)
 	// and not the memory where *root points to because NULL is not a valid location to be pointed at
 	NODE* currentElemPtr = *root;
 
-	while(currentElemPtr->next != NULL)
+	while (currentElemPtr->next != NULL)
 	{
 		currentElemPtr = currentElemPtr->next;
 	}
 	currentElemPtr->next = newElemPtr;
 }
 
-void Insert(NODE** root, int index, MEMORY_BLOCK** data)
+void ListInsert(NODE** root, int index, MEMORY_BLOCK** data)
 {
 	NODE* newElem = (NODE*)malloc(sizeof(NODE));
-	newElem->blockData = **data;
+	newElem->blockInfo = **data;
 	newElem->next = NULL;
 
-	if (Count(&(*root)) <= index)
+	if (ListCount(&(*root)) <= index)
 	{
 		return;
 	}
@@ -41,9 +42,9 @@ void Insert(NODE** root, int index, MEMORY_BLOCK** data)
 	NODE* currentElemPtr = *root;
 	NODE* previousElemPtr = NULL;
 	int idx = 0;
-	while(currentElemPtr != NULL)
+	while (currentElemPtr != NULL)
 	{
-		if(idx == index)
+		if (idx == index)
 		{
 			newElem->next = currentElemPtr;
 			previousElemPtr->next = newElem;
@@ -55,10 +56,10 @@ void Insert(NODE** root, int index, MEMORY_BLOCK** data)
 	}
 }
 
-MEMORY_BLOCK* ElementAt(NODE** root, int index)
+MEMORY_BLOCK* ListElementAt(NODE** root, int index)
 {
 	// Empty list
-	if(*root == NULL)
+	if (*root == NULL)
 	{
 		// Was not defined what to return in case of empty list
 		return NULL;
@@ -67,11 +68,11 @@ MEMORY_BLOCK* ElementAt(NODE** root, int index)
 	NODE* currentElemPtr = *root;
 
 	int elemCnt = 0;
-	while(currentElemPtr != NULL)
+	while (currentElemPtr != NULL)
 	{
-		if(elemCnt == index)
+		if (elemCnt == index)
 		{
-			return &currentElemPtr->blockData;
+			return &currentElemPtr->blockInfo;
 		}
 		currentElemPtr = currentElemPtr->next;
 		elemCnt++;
@@ -81,14 +82,14 @@ MEMORY_BLOCK* ElementAt(NODE** root, int index)
 	return NULL;
 }
 
-NODE* RemoveAt(NODE** root, int index)
+NODE* ListRemoveAt(NODE** root, int index)
 {
-	if(*root == NULL)
+	if (*root == NULL)
 	{
 		return *root;
 	}
 
-	if(Count(root) <= index)
+	if (ListCount(root) <= index)
 	{
 		return NULL;
 	}
@@ -96,9 +97,9 @@ NODE* RemoveAt(NODE** root, int index)
 	NODE* currentElemPtr = *root;
 	NODE* previousElemPtr = NULL;
 	int idx = 0;
-	while(currentElemPtr != NULL)
+	while (currentElemPtr != NULL)
 	{
-		if(idx == index)
+		if (idx == index)
 		{
 			NODE* next = currentElemPtr->next;
 			//free(currentElemPtr);
@@ -113,7 +114,7 @@ NODE* RemoveAt(NODE** root, int index)
 	return NULL;
 }
 
-NODE* Remove(NODE** root, void* ptr)
+NODE* ListRemove(NODE** root, void* ptr)
 {
 	if (*root == NULL)
 	{
@@ -122,14 +123,14 @@ NODE* Remove(NODE** root, void* ptr)
 
 	NODE* nodeToRemove = *root;
 
-	if(Count(root) == 1)
+	if (ListCount(root) == 1)
 	{
 		*root = NULL;
 		return nodeToRemove;
 	}
 
 	// If it's the first node and has no previous nodes
-	if(nodeToRemove->blockData.dataPtr == ptr)
+	if (nodeToRemove->blockInfo.dataPtr == ptr)
 	{
 		NODE* next = nodeToRemove->next;
 		*root = next;
@@ -137,7 +138,7 @@ NODE* Remove(NODE** root, void* ptr)
 	}
 
 	NODE* previousElemPtr = NULL;
-	while(nodeToRemove->blockData.dataPtr != ptr)
+	while (nodeToRemove->blockInfo.dataPtr != ptr)
 	{
 		previousElemPtr = nodeToRemove;
 		nodeToRemove = nodeToRemove->next;
@@ -147,15 +148,15 @@ NODE* Remove(NODE** root, void* ptr)
 	return nodeToRemove;
 }
 
-void Clear(NODE** root)
+void ListClear(NODE** root)
 {
-	if(*root == NULL)
+	if (*root == NULL)
 	{
 		return;
 	}
 
 	NODE* restOfList = *root;
-	while(*root != NULL)
+	while (*root != NULL)
 	{
 		restOfList = restOfList->next;
 		free(*root);
@@ -163,9 +164,9 @@ void Clear(NODE** root)
 	}
 }
 
-int Count(NODE** root)
+int ListCount(NODE** root)
 {
-	if(*root == NULL)
+	if (*root == NULL)
 	{
 		return 0;
 	}
@@ -173,7 +174,7 @@ int Count(NODE** root)
 	NODE* currentElemPtr = *root;
 	int elemCnt = 0;
 
-	while(currentElemPtr != NULL)
+	while (currentElemPtr != NULL)
 	{
 		currentElemPtr = currentElemPtr->next;
 		elemCnt++;
