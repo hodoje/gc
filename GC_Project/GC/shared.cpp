@@ -54,6 +54,7 @@ void* Malloc(struct Heap_manager** hManager, int nbytes)
 	}
 	else
 	{
+		NODE* previous = NULL;
 		// Find the first fit
 		while (nbytes > firstFittingNode->blockInfo.dataSize)
 		{
@@ -63,15 +64,28 @@ void* Malloc(struct Heap_manager** hManager, int nbytes)
 				// after collect, start again
 				// if it fails again, heap is full
 			}
+			previous = firstFittingNode;
 			firstFittingNode = firstFittingNode->next;
 		}
+
+		// Assign pointer and update the fitting node
 		mB->dataPtr = firstFittingNode->blockInfo.dataPtr;
 		firstFittingNode->blockInfo.dataPtr = (char*)(firstFittingNode->blockInfo.dataPtr) + nbytes;
 		firstFittingNode->blockInfo.dataSize = firstFittingNode->blockInfo.dataSize - nbytes;
+
+		// Handle if updated available size if 0 depending if there is a previous node to first fitting
 		if (firstFittingNode->blockInfo.dataSize == 0)
 		{
-			hM->listOfFree = firstFittingNode->next;
-			free(firstFittingNode);
+			if (previous == NULL)
+			{
+				hM->listOfFree = firstFittingNode->next;
+				free(firstFittingNode);
+			}
+			else
+			{
+				previous->next = firstFittingNode->next;
+				free(firstFittingNode);
+			}
 		}
 	}
 
@@ -93,12 +107,12 @@ void Free(struct Heap_manager** hManager, void** ptr)
 
 	// Search where to put the block back
 	// Try to find the between
-	NODE* freeNodeIterator = hM->listOfFree;
+	NODE* firstFreeNodeIterator = hM->listOfFree;
 	NODE* previousNode = NULL;
-	while (freeNodeIterator->blockInfo.dataPtr < nodeToFree->blockInfo.dataPtr)
+	while (firstFreeNodeIterator->blockInfo.dataPtr < nodeToFree->blockInfo.dataPtr)
 	{
-		previousNode = freeNodeIterator;
-		freeNodeIterator = freeNodeIterator->next;
+		previousNode = firstFreeNodeIterator;
+		firstFreeNodeIterator = firstFreeNodeIterator->next;
 	}
 
 	// If there is only one block currently free and it's not at the beginning of heap
@@ -106,40 +120,35 @@ void Free(struct Heap_manager** hManager, void** ptr)
 	if (previousNode == NULL)
 	{
 		previousNode = nodeToFree;
-		previousNode->next = freeNodeIterator;
+		previousNode->next = firstFreeNodeIterator;
 		hM->listOfFree = previousNode;
 
 		// Check if nodeToFree and its next node are next to each other
-		if ((char*)nodeToFree->blockInfo.dataPtr + nodeToFree->blockInfo.dataSize == freeNodeIterator->blockInfo.dataPtr)
+		if ((char*)nodeToFree->blockInfo.dataPtr + nodeToFree->blockInfo.dataSize == firstFreeNodeIterator->blockInfo.dataPtr)
 		{
-			freeNodeIterator->blockInfo.dataPtr = nodeToFree->blockInfo.dataPtr;
-			freeNodeIterator->blockInfo.dataSize = freeNodeIterator->blockInfo.dataSize + nodeToFree->blockInfo.dataSize;
-			hM->listOfFree = freeNodeIterator;
-			nodeToFree->next = NULL;
-			free(nodeToFree);
+			firstFreeNodeIterator->blockInfo.dataPtr = nodeToFree->blockInfo.dataPtr;
+			firstFreeNodeIterator->blockInfo.dataSize = firstFreeNodeIterator->blockInfo.dataSize + nodeToFree->blockInfo.dataSize;
+			hM->listOfFree = firstFreeNodeIterator;
 		}
 	}
 	else
 	{
 		previousNode->next = nodeToFree;
-		nodeToFree->next = freeNodeIterator;
+		nodeToFree->next = firstFreeNodeIterator;
 
 		// Check if previous and nodeToFree are next to each other
 		if ((char*)previousNode->blockInfo.dataPtr + previousNode->blockInfo.dataSize == nodeToFree->blockInfo.dataPtr)
 		{
 			// If they are increase the size of previous and free nodeToFree
 			previousNode->blockInfo.dataSize = previousNode->blockInfo.dataSize + nodeToFree->blockInfo.dataSize;
-			nodeToFree->next = NULL;
+			previousNode->next = nodeToFree->next;
 			free(nodeToFree);
 		}
-		else if ((char*)nodeToFree->blockInfo.dataPtr + nodeToFree->blockInfo.dataSize == freeNodeIterator->blockInfo.dataPtr)
+		// if not, check if nodeToFree and current node are next to each other
+		else if ((char*)nodeToFree->blockInfo.dataPtr + nodeToFree->blockInfo.dataSize == firstFreeNodeIterator->blockInfo.dataPtr)
 		{
-			// if not, check if nodeToFree and current node are next to each other
-			freeNodeIterator->blockInfo.dataPtr = nodeToFree->blockInfo.dataPtr;
-			freeNodeIterator->blockInfo.dataSize = freeNodeIterator->blockInfo.dataSize + nodeToFree->blockInfo.dataSize;
-			hM->listOfFree = freeNodeIterator;
-			nodeToFree->next = NULL;
-			free(nodeToFree);
+			firstFreeNodeIterator->blockInfo.dataPtr = nodeToFree->blockInfo.dataPtr;
+			firstFreeNodeIterator->blockInfo.dataSize = firstFreeNodeIterator->blockInfo.dataSize + nodeToFree->blockInfo.dataSize;
 		}
 	}
 }

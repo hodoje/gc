@@ -36,17 +36,17 @@
     <ClCompile Include="Test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="allocator.cpp">
-      <Filter>Source Files\Allocator</Filter>
+    <ClCompile Include="shared.cpp">
+      <Filter>Source Files\Shared</Filter>
     </ClCompile>
     <ClCompile Include="collector.cpp">
       <Filter>Source Files\Collector</Filter>
     </ClCompile>
+    <ClCompile Include="allocator.cpp">
+      <Filter>Source Files\Allocator</Filter>
+    </ClCompile>
     <ClCompile Include="list.cpp">
       <Filter>Resource Files</Filter>
-    </ClCompile>
-    <ClCompile Include="shared.cpp">
-      <Filter>Source Files\Shared</Filter>
     </ClCompile>
     <ClCompile Include="hashset.cpp">
       <Filter>Resource Files</Filter>

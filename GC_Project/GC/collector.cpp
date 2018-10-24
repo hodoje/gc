@@ -80,8 +80,7 @@ void Sweep(H_MANAGER** hManager)
 					}
 					else
 					{
-						NODE* nodeToFree = HashsetRemove(&htoc, entryToSweepOrUnmark->key);
-						hM->free(&hM, &nodeToFree->blockInfo.dataPtr);
+						hM->free(&hM, &entryToSweepOrUnmark->blockInfo.dataPtr);
 					}
 					entryToSweepOrUnmark = next;
 				}
@@ -109,6 +108,25 @@ void MarkAndSweep(H_MANAGER** hManager, struct Collector** collector)
 	Mark(&hM, &col);
 	Sweep(&hM);
 }
+
+HANDLE CreateThreadWrapper(struct Collector** collector, 
+					LPSECURITY_ATTRIBUTES   lpThreadAttributes,
+					SIZE_T                  dwStackSize,
+					LPTHREAD_START_ROUTINE  lpStartAddress,
+					__drv_aliasesMem LPVOID lpParameter,
+					DWORD                   dwCreationFlags,
+					LPDWORD                 lpThreadId)
+{
+	COLLECTOR* col = *collector;
+	HANDLE tHandle = CreateThread(lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags, lpThreadId);
+	col->threadArr[col->threadArrIdx] = tHandle;
+	col->threadArrIdx++;
+	return tHandle;
+}
+
+
+
+
 
 
 //struct s1 {
@@ -153,6 +171,8 @@ COLLECTOR* CollectorInit()
 	COLLECTOR* collector = (COLLECTOR*)malloc(sizeof(COLLECTOR));
 	/*collector->rootSet = (char*)GetRootCollection;*/
 	collector->rootSet[4];
+	collector->threadArr[10];
+	collector->threadArrIdx = 0;
 	collector->MarkAndSweep = MarkAndSweep;
 	return collector;
 }
