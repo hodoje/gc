@@ -48,6 +48,9 @@
     <ClCompile Include="shared.cpp">
       <Filter>Source Files\Shared</Filter>
     </ClCompile>
+    <ClCompile Include="hashset.cpp">
+      <Filter>Resource Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="allocator.h">
@@ -64,6 +67,9 @@
     </ClInclude>
     <ClInclude Include="shared.h">
       <Filter>Header Files\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="hashset.h">
+      <Filter>Resource Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

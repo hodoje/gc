@@ -23,11 +23,11 @@ HASHSET* HashsetInit(unsigned int size)
 	return hashset;
 }
 
-int HashsetGetIndex(HASHSET** table, void* key)
+int HashsetGetIndex(HASHSET** set, void* key)
 {
 	int hash = HashsetGetHash(key);
 
-	return (hash % (*table)->size);
+	return (hash % (*set)->size);
 }
 
 int HashsetGetHash(void* key)
@@ -57,7 +57,7 @@ HASHSET_ENTRY* HashsetCreateEntry(MEMORY_BLOCK* entry)
 	return newentry;
 }
 
-void HashsetAdd(HASHSET** table, MEMORY_BLOCK* entry)
+void HashsetAdd(HASHSET** set, MEMORY_BLOCK* entry)
 {
 	int index = 0;
 	HASHSET_ENTRY* newentry = NULL;
@@ -66,10 +66,10 @@ void HashsetAdd(HASHSET** table, MEMORY_BLOCK* entry)
 	HASHSET_ENTRY* last = NULL;
 	void* key = entry->dataPtr;
 
-	index = HashsetGetIndex(table, key);
+	index = HashsetGetIndex(set, key);
 
 	// Next is the first entry on particular index
-	next = (*table)->buckets[index];
+	next = (*set)->buckets[index];
 
 	// Checks if there is already an entry on particular index
 	// Iterate to the end of the list until next is NULL
@@ -85,9 +85,9 @@ void HashsetAdd(HASHSET** table, MEMORY_BLOCK* entry)
 	newentry = HashsetCreateEntry(entry);
 
 	// Case if bucket is empty
-	if (next == (*table)->buckets[index])
+	if (next == (*set)->buckets[index])
 	{
-		(*table)->buckets[index] = newentry;
+		(*set)->buckets[index] = newentry;
 		newentry->next = NULL;
 	}
 	// Case if bucket is not empty
@@ -103,16 +103,16 @@ void HashsetAdd(HASHSET** table, MEMORY_BLOCK* entry)
 	}
 }
 
-NODE* HashsetRemove(HASHSET** table, void* key)
+NODE* HashsetRemove(HASHSET** set, void* key)
 {
 	int index = 0;
 	HASHSET_ENTRY* elementToRemove = NULL;
 	HASHSET_ENTRY* previous = NULL;
 
-	index = HashsetGetIndex(table, key);
+	index = HashsetGetIndex(set, key);
 
 	// Getting the first element of the list
-	elementToRemove = (*table)->buckets[index];
+	elementToRemove = (*set)->buckets[index];
 
 	while (elementToRemove != NULL && elementToRemove->key != NULL && (key != elementToRemove->key))
 	{
@@ -124,7 +124,7 @@ NODE* HashsetRemove(HASHSET** table, void* key)
 	if (previous == NULL)
 	{
 		// Either elementToRemove's next or NULL will be at this index
-		(*table)->buckets[index] = elementToRemove->next;
+		(*set)->buckets[index] = elementToRemove->next;
 	}
 	else
 	{
@@ -140,11 +140,11 @@ NODE* HashsetRemove(HASHSET** table, void* key)
 	return nodeForFreeList;
 }
 
-HASHSET_ENTRY* HashsetGetElement(HASHSET** table, void* key)
+HASHSET_ENTRY* HashsetGetElement(HASHSET** set, void* key)
 {
-	int index = HashsetGetIndex(table, key);
+	int index = HashsetGetIndex(set, key);
 	HASHSET_ENTRY* entryToReturn = NULL;
-	entryToReturn = (*table)->buckets[index];
+	entryToReturn = (*set)->buckets[index];
 	if (entryToReturn == NULL)
 	{
 		return NULL;
@@ -159,14 +159,14 @@ HASHSET_ENTRY* HashsetGetElement(HASHSET** table, void* key)
 	}
 }
 
-void* HashsetLookup(HASHSET** table, void* key)
+void* HashsetLookup(HASHSET** set, void* key)
 {
 	int index = 0;
 	HASHSET_ENTRY* entry;
 
-	index = HashsetGetIndex(table, key);
+	index = HashsetGetIndex(set, key);
 
-	entry = (*table)->buckets[index];
+	entry = (*set)->buckets[index];
 
 	while (entry != NULL && entry->key != NULL && entry->key != key)
 	{
