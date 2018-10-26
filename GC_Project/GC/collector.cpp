@@ -182,13 +182,21 @@ HANDLE CreateThreadWrapper(struct Collector**				  collector,
 	col->threadArr[col->threadArrFirstFreeIdx].tHandle = tHandle;
 
 	// Update the next free index
+	// If not possible, resize
+	bool shouldResize = true;
 	for(int i = 0; i < col->threadArrSize; i++)
 	{
 		if(col->threadArr[i].tHandle == NULL)
 		{
 			col->threadArrFirstFreeIdx = i;
+			shouldResize = false;
 			break;
 		}
+	}
+
+	if(shouldResize)
+	{
+		ScaleThreadCollection(&col);
 	}
 
 	return tHandle;
@@ -234,7 +242,10 @@ bool CloseThreadHandleWrapper(struct Collector** collector, HANDLE tHandle)
 
 void ScaleThreadCollection(struct Collector** collector)
 {
-
+	COLLECTOR* col = *collector;
+	col->threadArr = (THREAD_COLLECTION_ITEM*)realloc(col->threadArr, 2 * col->threadArrSize * sizeof(THREAD_COLLECTION_ITEM));
+	col->threadArrSize = col->threadArrSize + col->threadArrSize / 2;
+	col->threadArrFirstFreeIdx = col->threadArrSize / 2;
 }
 
 void GetRootCollection(struct Collector** collector, struct Heap_manager** hManager)
