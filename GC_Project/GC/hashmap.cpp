@@ -38,16 +38,12 @@ int HashmapGetIndex(HASHMAP** set, void* key)
 
 int HashmapGetHash(void* key)
 {
-	int hash;
-
-	hash = (int)key / 4;
-
-	return hash;
+	return (int)key / 4;;
 }
 
 HASHMAP_ENTRY* HashmapCreateEntry(HEAP_BLOCK* newBlock)
 {
-	HASHMAP_ENTRY* newentry;
+	HASHMAP_ENTRY* newentry = NULL;
 	void *key = newBlock->dataPtr;
 
 	if (key == NULL)
@@ -67,16 +63,13 @@ HASHMAP_ENTRY* HashmapCreateEntry(HEAP_BLOCK* newBlock)
 	return newentry;
 }
 
-void HashmapAdd(HASHMAP** set, HEAP_BLOCK* entry)
+void HashmapAdd(HASHMAP** set, HEAP_BLOCK** entry)
 {
-	int index = 0;
 	HASHMAP_ENTRY* newentry = NULL;
 	HASHMAP_ENTRY* next = NULL;
-	// Last is the last previous element of an entry to be inserted
-	HASHMAP_ENTRY* last = NULL;
-	void* key = entry->dataPtr;
-
-	index = HashmapGetIndex(set, key);
+	HASHMAP_ENTRY* last = NULL;		// Last is the last previous element of an entry to be inserted
+	void* key = (*entry)->dataPtr;
+	int index = HashmapGetIndex(set, key);
 
 	// Next is the first entry on particular index
 	next = (*set)->buckets[index];
@@ -92,7 +85,7 @@ void HashmapAdd(HASHMAP** set, HEAP_BLOCK* entry)
 	// New entry has to be assigned to next
 
 	// Creates new entry based on new memory block
-	newentry = HashmapCreateEntry(entry);
+	newentry = HashmapCreateEntry(*entry);
 
 	// Case if bucket is empty
 	if (next == (*set)->buckets[index])
@@ -115,11 +108,9 @@ void HashmapAdd(HASHMAP** set, HEAP_BLOCK* entry)
 
 NODE* HashmapRemove(HASHMAP** set, void* key)
 {
-	int index = 0;
 	HASHMAP_ENTRY* elementToRemove = NULL;
 	HASHMAP_ENTRY* previous = NULL;
-
-	index = HashmapGetIndex(set, key);
+	int index = HashmapGetIndex(set, key);
 
 	// Getting the first element of the list
 	elementToRemove = (*set)->buckets[index];
@@ -143,17 +134,24 @@ NODE* HashmapRemove(HASHMAP** set, void* key)
 	}
 
 	// Reference to a node to be added to the H_MANAGER free list
-	NODE* nodeForFreeList = (NODE*)malloc(sizeof(NODE));
-	nodeForFreeList->blockInfo = *elementToRemove->blockInfo;
+	NODE* nodeForFreeList = NULL;
+	if((nodeForFreeList = (NODE*)malloc(sizeof(NODE))) == NULL)
+	{
+		return NULL;
+	}
+	nodeForFreeList->blockInfo = elementToRemove->blockInfo;
 	nodeForFreeList->next = NULL;
+
+	free(elementToRemove);
 
 	return nodeForFreeList;
 }
 
 HASHMAP_ENTRY* HashmapGetElement(HASHMAP** set, void* key)
 {
-	int index = HashmapGetIndex(set, key);
 	HASHMAP_ENTRY* entryToReturn = NULL;
+	int index = HashmapGetIndex(set, key);
+
 	entryToReturn = (*set)->buckets[index];
 	if (entryToReturn == NULL)
 	{
@@ -175,25 +173,4 @@ HASHMAP_ENTRY* HashmapGetElement(HASHMAP** set, void* key)
 			return entryToReturn;
 		}
 	}
-}
-
-// This function is not needed
-void* HashmapLookup(HASHMAP** set, void* key)
-{
-	int index = 0;
-	HASHMAP_ENTRY* entry;
-
-	index = HashmapGetIndex(set, key);
-
-	entry = (*set)->buckets[index];
-
-	while (entry != NULL && entry->key != NULL && entry->key != key)
-	{
-		entry = entry->next;
-	}
-
-	if (entry == NULL || entry->key == NULL || entry->key != key)
-		return NULL;
-	else
-		return &entry->blockInfo;
 }

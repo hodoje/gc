@@ -1,6 +1,4 @@
 #include "collector.h"
-#include "shared.h"
-#include <intsafe.h>
 
 #define PRAGMA_PACK_FOUR 4
 #define POINTER_SIZE 4
@@ -14,7 +12,7 @@ void MarkChildren(H_MANAGER** hManager, char* pseudoRoot, int size)
 	}
 
 	H_MANAGER* hM = *hManager;
-	HASHMAP_ENTRY* hashmapEntry;
+	HASHMAP_ENTRY* hashmapEntry = NULL;
 	int iterations = size / PRAGMA_PACK_FOUR;
 
 	for (int i = 0; i < iterations; i++)
@@ -26,29 +24,26 @@ void MarkChildren(H_MANAGER** hManager, char* pseudoRoot, int size)
 		if ((hashmapEntry = HashmapGetElement(&hM->hashMapOfOccupied, child)) != NULL)
 		{
 			// If yes, mark it and go to his children
-			/*hashmapEntry->blockInfo.mark = true;
-			MarkChildren(&hM, (char*)hashmapEntry->blockInfo.dataPtr, hashmapEntry->blockInfo.dataSize);*/
 			hashmapEntry->blockInfo->mark = true;
 			MarkChildren(&hM, (char*)hashmapEntry->blockInfo->dataPtr, hashmapEntry->blockInfo->dataSize);
 		}
 	}
 }
 
-void Mark(H_MANAGER** hManager, struct Collector** collector)
+void Mark(struct Collector** collector, H_MANAGER** hManager)
 {
 	H_MANAGER* hM = *hManager;
 	COLLECTOR* col = *collector;
 	char* heapStartAddress = hM->heapStart;
 	char* heapEndAddress = heapStartAddress + hM->heapSize;
 
-	char* currentPointer = NULL;
-
-	// Simulation of rootset
+	// Simulation of rootCollection
+	char* currentRoot = NULL;
 	for (int i = 0; i < 4; i++)
 	{
 		// Mark the root		
-		currentPointer = col->rootSet[i];
-		HASHMAP_ENTRY* occupiedHashEntry = HashmapGetElement(&hM->hashMapOfOccupied, currentPointer);
+		currentRoot = col->rootCollection[i];
+		HASHMAP_ENTRY* occupiedHashEntry = HashmapGetElement(&hM->hashMapOfOccupied, currentRoot);
 		occupiedHashEntry->blockInfo->mark = true;
 
 		// Check his children and mark if necessary
@@ -104,12 +99,12 @@ void Sweep(H_MANAGER** hManager)
 	}
 }
 
-void MarkAndSweep(H_MANAGER** hManager, struct Collector** collector)
+void MarkAndSweep(struct Collector** collector, H_MANAGER** hManager)
 {
 	H_MANAGER* hM = *hManager;
 	COLLECTOR* col = *collector;
 	SuspendAllCurrentProcessThreads(&col);
-	Mark(&hM, &col);
+	Mark(&col, &hM);
 	Sweep(&hM);
 	ResumeAllCurrentProcessThreads(&col);
 }
@@ -145,10 +140,15 @@ DWORD WINAPI ThreadFunctionWrapper(__drv_aliasesMem LPVOID lpParameters)
 	LPTHREAD_START_ROUTINE userRoutine = (LPTHREAD_START_ROUTINE)((TFWP_INTERNAL_WRAPPER*)lpParameters)->tfwp.userRoutine;
 	LPVOID routineParameters = ((TFWP_INTERNAL_WRAPPER*)lpParameters)->tfwp.routineParameters;
 
-	// We will use the address of this variable as a first stack location
-	int firstStackAddressHelper = 0;
+	unsigned long lowLimit;
+	unsigned long HighLimit;
+	GetCurrentThreadStackLimits(&lowLimit, &HighLimit);
+	printf("Lowlimit - 0x%X\nHighlimit - 0x%X\n", lowLimit, HighLimit);
 
-	col->threadArr[currentThreadCollectionItemIndex].firstThreadStackAddress = (char*)&firstStackAddressHelper;
+	// We will use the address of this variable as a first stack location
+	//int firstStackAddressHelper = 0;
+
+	col->threadArr[currentThreadCollectionItemIndex].firstThreadStackAddress = (char*)lowLimit;
 	col->threadArr[currentThreadCollectionItemIndex].threadStackSize = 1024 * 1024 
 																	 - sizeof(COLLECTOR*) 
 																	 - sizeof(int) 
@@ -168,7 +168,12 @@ HANDLE CreateThreadWrapper(struct Collector**				  collector,
 						   LPDWORD							  lpThreadId)
 {
 	COLLECTOR* col = *collector;
-	TFWP_INTERNAL_WRAPPER* tfwpac = (TFWP_INTERNAL_WRAPPER*)malloc(sizeof(TFWP_INTERNAL_WRAPPER));
+	TFWP_INTERNAL_WRAPPER* tfwpac = NULL;
+
+	if((tfwpac = (TFWP_INTERNAL_WRAPPER*)malloc(sizeof(TFWP_INTERNAL_WRAPPER))) == NULL)
+	{
+		return NULL;
+	}
 
 	tfwpac->collector = col;
 	int currentThreadCollectionItemIndex = col->threadArrFirstFreeIdx;		
@@ -202,7 +207,7 @@ HANDLE CreateThreadWrapper(struct Collector**				  collector,
 	return tHandle;
 }
 
-THREAD_COLLECTION_ITEM* FindThreadCollectionItem(struct Collector** collector, HANDLE tHandle, int* outIndex)
+THREAD_COLLECTION_ELEMENT* FindThreadCollectionItem(struct Collector** collector, HANDLE tHandle, int* outIndex)
 {
 	COLLECTOR* col = *collector;
 	for (int i = 0; i < col->threadArrSize; i++)
@@ -219,8 +224,9 @@ THREAD_COLLECTION_ITEM* FindThreadCollectionItem(struct Collector** collector, H
 bool CloseThreadHandleWrapper(struct Collector** collector, HANDLE tHandle)
 {
 	COLLECTOR* col = *collector;
-	THREAD_COLLECTION_ITEM* tciToClose;
+	THREAD_COLLECTION_ELEMENT* tciToClose = NULL;
 	int tciIndex = 0;
+
 	tciToClose = FindThreadCollectionItem(&col, tHandle, &tciIndex);
 	if (tciToClose != NULL)
 	{
@@ -243,7 +249,7 @@ bool CloseThreadHandleWrapper(struct Collector** collector, HANDLE tHandle)
 void ScaleThreadCollection(struct Collector** collector)
 {
 	COLLECTOR* col = *collector;
-	col->threadArr = (THREAD_COLLECTION_ITEM*)realloc(col->threadArr, 2 * col->threadArrSize * sizeof(THREAD_COLLECTION_ITEM));
+	col->threadArr = (THREAD_COLLECTION_ELEMENT*)realloc(col->threadArr, 2 * col->threadArrSize * sizeof(THREAD_COLLECTION_ELEMENT));
 	col->threadArrSize = col->threadArrSize + col->threadArrSize / 2;
 	col->threadArrFirstFreeIdx = col->threadArrSize / 2;
 }
@@ -253,23 +259,45 @@ void GetRootCollection(struct Collector** collector, struct Heap_manager** hMana
 	//// SIMULATION
 	//H_MANAGER* hM = *hManager;
 	//COLLECTOR* col = *collector;
+	//char* heapStartAddress = hM->heapStart;
+	//char* heapEndAddress = hM->heapStart + hM->heapSize;
+	//SuspendAllCurrentProcessThreads(&col);
 
-	////// Ova provera ide ovde
-	/////*if (currentPointer > heapStartAddress && currentPointer < heapEndAddress)
-	////{
-
-	////}*/
+	//// Iterate through the whole thread array
+	//// Not optimal because it's goint to the end of the array
+	//// although there might not be stored handles
+	//for (int i = 0; i < col->threadArrSize; i++)
+	//{
+	//	// Iterate the stack
+	//	int* stackReader = (int*)(col->threadArr[i].firstThreadStackAddress);
+	//	for (int j = 0; j < col->threadArr[i].threadStackSize; j++)
+	//	{
+	//		/*if (*stackReader >= (int)heapStartAddress && *stackReader <= (int)heapEndAddress)
+	//		{
+	//			// Add to roots if in range			
+	//		}*/
+	//		stackReader = stackReader + 1;
+	//	}
+	//}
 }
-
-
 
 COLLECTOR* CollectorInit()
 {
-	COLLECTOR* collector = (COLLECTOR*)malloc(sizeof(COLLECTOR));
-	collector->rootSet[4];
-	collector->threadArr = (THREAD_COLLECTION_ITEM*)calloc(32, sizeof(THREAD_COLLECTION_ITEM));
+	COLLECTOR* collector = NULL;
+
+	if((collector = (COLLECTOR*)malloc(sizeof(COLLECTOR))) == NULL)
+	{
+		return NULL;
+	}
+	
+	if((collector->threadArr = (THREAD_COLLECTION_ELEMENT*)calloc(32, sizeof(THREAD_COLLECTION_ELEMENT))) == NULL)
+	{
+		return NULL;
+	}
+
 	collector->threadArrFirstFreeIdx = 0;
 	collector->threadArrSize = 32;
+	collector->rootCollection[4];
 	collector->MarkAndSweep = MarkAndSweep;
 	return collector;
 }
