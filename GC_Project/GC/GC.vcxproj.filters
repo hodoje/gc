@@ -31,6 +31,12 @@
     <Filter Include="Source Files\Shared">
       <UniqueIdentifier>{7eea199a-0749-4c48-aa29-e9bb932ddf18}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\Code">
+      <UniqueIdentifier>{226d1172-c7e0-4adf-99d6-f2e95d16a3fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Headers">
+      <UniqueIdentifier>{85c1a349-94b3-45fd-8233-448a67478860}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Test.cpp">
@@ -45,11 +51,11 @@
     <ClCompile Include="allocator.cpp">
       <Filter>Source Files\Allocator</Filter>
     </ClCompile>
-    <ClCompile Include="list.cpp">
-      <Filter>Resource Files</Filter>
+    <ClCompile Include="hashmap.cpp">
+      <Filter>Resource Files\Code</Filter>
     </ClCompile>
-    <ClCompile Include="hashset.cpp">
-      <Filter>Resource Files</Filter>
+    <ClCompile Include="list.cpp">
+      <Filter>Resource Files\Code</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -59,17 +65,17 @@
     <ClInclude Include="collector.h">
       <Filter>Header Files\Collector</Filter>
     </ClInclude>
-    <ClInclude Include="list.h">
-      <Filter>Resource Files</Filter>
-    </ClInclude>
-    <ClInclude Include="structs.h">
-      <Filter>Resource Files</Filter>
-    </ClInclude>
     <ClInclude Include="shared.h">
       <Filter>Header Files\Shared</Filter>
     </ClInclude>
-    <ClInclude Include="hashset.h">
-      <Filter>Resource Files</Filter>
+    <ClInclude Include="hashmap.h">
+      <Filter>Resource Files\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="list.h">
+      <Filter>Resource Files\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="structs.h">
+      <Filter>Resource Files\Headers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

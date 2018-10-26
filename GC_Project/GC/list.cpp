@@ -1,7 +1,7 @@
 #include "list.h"
 
 // List API for MEMORY BLOCKS
-void ListAdd(NODE** root, MEMORY_BLOCK** data)
+void ListAdd(NODE** root, HEAP_BLOCK** data)
 {
 	NODE* newElemPtr = (NODE*)malloc(sizeof(NODE));
 	newElemPtr->blockInfo = **data;
@@ -28,7 +28,7 @@ void ListAdd(NODE** root, MEMORY_BLOCK** data)
 	currentElemPtr->next = newElemPtr;
 }
 
-void ListInsert(NODE** root, int index, MEMORY_BLOCK** data)
+void ListInsert(NODE** root, int index, HEAP_BLOCK** data)
 {
 	NODE* newElem = (NODE*)malloc(sizeof(NODE));
 	newElem->blockInfo = **data;
@@ -56,7 +56,7 @@ void ListInsert(NODE** root, int index, MEMORY_BLOCK** data)
 	}
 }
 
-MEMORY_BLOCK* ListElementAt(NODE** root, int index)
+HEAP_BLOCK* ListElementAt(NODE** root, int index)
 {
 	// Empty list
 	if (*root == NULL)

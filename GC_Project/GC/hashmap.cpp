@@ -1,36 +1,42 @@
-#include "hashset.h"
+#include "hashmap.h"
 
-HASHSET* HashsetInit(unsigned int size)
+HASHMAP* HashmapInit(unsigned int size)
 {
-	HASHSET* hashset = NULL;
+	HASHMAP* hashmap = NULL;
 
 	if (size < 1)
-		return NULL;
-
-	if ((hashset = (HASHSET*)malloc(sizeof(HASHSET))) == NULL)
-		return NULL;
-
-	if ((hashset->buckets = (HASHSET_ENTRY**)malloc(sizeof(HASHSET_ENTRY*)*size)) == NULL)
-		return NULL;
-
-	for (int i = 0; i < size; i++)
 	{
-		hashset->buckets[i] = NULL;
+		return NULL;
 	}
 
-	hashset->size = size;
+	if ((hashmap = (HASHMAP*)malloc(sizeof(HASHMAP))) == NULL)
+	{
+		return NULL;
+	}
+		
+	if ((hashmap->buckets = (HASHMAP_ENTRY**)malloc(size * sizeof(HASHMAP_ENTRY*))) == NULL)
+	{
+		return NULL;
+	}
+		
+	for (int i = 0; i < size; i++)
+	{
+		hashmap->buckets[i] = NULL;
+	}
 
-	return hashset;
+	hashmap->size = size;
+
+	return hashmap;
 }
 
-int HashsetGetIndex(HASHSET** set, void* key)
+int HashmapGetIndex(HASHMAP** set, void* key)
 {
-	int hash = HashsetGetHash(key);
+	int hash = HashmapGetHash(key);
 
 	return (hash % (*set)->size);
 }
 
-int HashsetGetHash(void* key)
+int HashmapGetHash(void* key)
 {
 	int hash;
 
@@ -39,34 +45,38 @@ int HashsetGetHash(void* key)
 	return hash;
 }
 
-HASHSET_ENTRY* HashsetCreateEntry(MEMORY_BLOCK* entry)
+HASHMAP_ENTRY* HashmapCreateEntry(HEAP_BLOCK* newBlock)
 {
-	HASHSET_ENTRY* newentry;
-	void *key = entry->dataPtr;
+	HASHMAP_ENTRY* newentry;
+	void *key = newBlock->dataPtr;
 
 	if (key == NULL)
+	{
 		return NULL;
+	}
 
-	if ((newentry = (HASHSET_ENTRY*)malloc(sizeof(HASHSET_ENTRY))) == NULL)
+	if ((newentry = (HASHMAP_ENTRY*)malloc(sizeof(HASHMAP_ENTRY))) == NULL)
+	{
 		return NULL;
+	}
 
-	newentry->key = entry->dataPtr;
-	newentry->blockInfo = *entry;
+	newentry->key = newBlock->dataPtr;
+	newentry->blockInfo = newBlock;
 	newentry->next = NULL;
 
 	return newentry;
 }
 
-void HashsetAdd(HASHSET** set, MEMORY_BLOCK* entry)
+void HashmapAdd(HASHMAP** set, HEAP_BLOCK* entry)
 {
 	int index = 0;
-	HASHSET_ENTRY* newentry = NULL;
-	HASHSET_ENTRY* next = NULL;
+	HASHMAP_ENTRY* newentry = NULL;
+	HASHMAP_ENTRY* next = NULL;
 	// Last is the last previous element of an entry to be inserted
-	HASHSET_ENTRY* last = NULL;
+	HASHMAP_ENTRY* last = NULL;
 	void* key = entry->dataPtr;
 
-	index = HashsetGetIndex(set, key);
+	index = HashmapGetIndex(set, key);
 
 	// Next is the first entry on particular index
 	next = (*set)->buckets[index];
@@ -82,7 +92,7 @@ void HashsetAdd(HASHSET** set, MEMORY_BLOCK* entry)
 	// New entry has to be assigned to next
 
 	// Creates new entry based on new memory block
-	newentry = HashsetCreateEntry(entry);
+	newentry = HashmapCreateEntry(entry);
 
 	// Case if bucket is empty
 	if (next == (*set)->buckets[index])
@@ -103,13 +113,13 @@ void HashsetAdd(HASHSET** set, MEMORY_BLOCK* entry)
 	}
 }
 
-NODE* HashsetRemove(HASHSET** set, void* key)
+NODE* HashmapRemove(HASHMAP** set, void* key)
 {
 	int index = 0;
-	HASHSET_ENTRY* elementToRemove = NULL;
-	HASHSET_ENTRY* previous = NULL;
+	HASHMAP_ENTRY* elementToRemove = NULL;
+	HASHMAP_ENTRY* previous = NULL;
 
-	index = HashsetGetIndex(set, key);
+	index = HashmapGetIndex(set, key);
 
 	// Getting the first element of the list
 	elementToRemove = (*set)->buckets[index];
@@ -134,16 +144,16 @@ NODE* HashsetRemove(HASHSET** set, void* key)
 
 	// Reference to a node to be added to the H_MANAGER free list
 	NODE* nodeForFreeList = (NODE*)malloc(sizeof(NODE));
-	nodeForFreeList->blockInfo = elementToRemove->blockInfo;
+	nodeForFreeList->blockInfo = *elementToRemove->blockInfo;
 	nodeForFreeList->next = NULL;
 
 	return nodeForFreeList;
 }
 
-HASHSET_ENTRY* HashsetGetElement(HASHSET** set, void* key)
+HASHMAP_ENTRY* HashmapGetElement(HASHMAP** set, void* key)
 {
-	int index = HashsetGetIndex(set, key);
-	HASHSET_ENTRY* entryToReturn = NULL;
+	int index = HashmapGetIndex(set, key);
+	HASHMAP_ENTRY* entryToReturn = NULL;
 	entryToReturn = (*set)->buckets[index];
 	if (entryToReturn == NULL)
 	{
@@ -151,20 +161,29 @@ HASHSET_ENTRY* HashsetGetElement(HASHSET** set, void* key)
 	}
 	else
 	{
-		while (entryToReturn->key != key)
+		while (entryToReturn != NULL && entryToReturn != NULL && entryToReturn->key != key)
 		{
 			entryToReturn = entryToReturn->next;
 		}
-		return entryToReturn;
+		
+		if (entryToReturn == NULL || entryToReturn->key == NULL || entryToReturn->key != key)
+		{
+			return NULL;
+		}
+		else
+		{
+			return entryToReturn;
+		}
 	}
 }
 
-void* HashsetLookup(HASHSET** set, void* key)
+// This function is not needed
+void* HashmapLookup(HASHMAP** set, void* key)
 {
 	int index = 0;
-	HASHSET_ENTRY* entry;
+	HASHMAP_ENTRY* entry;
 
-	index = HashsetGetIndex(set, key);
+	index = HashmapGetIndex(set, key);
 
 	entry = (*set)->buckets[index];
 

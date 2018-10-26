@@ -113,7 +113,7 @@
   <ItemGroup>
     <ClCompile Include="allocator.cpp" />
     <ClCompile Include="collector.cpp" />
-    <ClCompile Include="hashset.cpp" />
+    <ClCompile Include="hashmap.cpp" />
     <ClCompile Include="list.cpp" />
     <ClCompile Include="shared.cpp" />
     <ClCompile Include="Test.cpp" />
@@ -121,7 +121,7 @@
   <ItemGroup>
     <ClInclude Include="allocator.h" />
     <ClInclude Include="collector.h" />
-    <ClInclude Include="hashset.h" />
+    <ClInclude Include="hashmap.h" />
     <ClInclude Include="list.h" />
     <ClInclude Include="shared.h" />
     <ClInclude Include="structs.h" />

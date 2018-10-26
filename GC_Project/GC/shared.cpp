@@ -1,6 +1,6 @@
 #include "shared.h"
 
-#define INITIAL_HEAP_SIZE 2048 * 10
+#define INITIAL_HEAP_SIZE 100 * 1024 * 1024
 #define INITIAL_HASHTABLE_SIZE INITIAL_HEAP_SIZE / 8
 
 H_MANAGER* HeapManagerInit()
@@ -10,17 +10,18 @@ H_MANAGER* HeapManagerInit()
 	hM->listOfFree = (NODE*)malloc(sizeof(Node));
 	hM->mallocSemaphore = CreateSemaphore(NULL, 1, 1, NULL);
 
-	MEMORY_BLOCK* initialMemoryBlock = (MEMORY_BLOCK*)malloc(sizeof(MEMORY_BLOCK));
+	HEAP_BLOCK* initialMemoryBlock = (HEAP_BLOCK*)malloc(sizeof(HEAP_BLOCK));
 	initialMemoryBlock->dataPtr = hM->heapStart;
 	initialMemoryBlock->dataSize = hM->heapSize;
 	initialMemoryBlock->mark = false;
 
 	hM->listOfFree->blockInfo = *initialMemoryBlock;
 	hM->listOfFree->next = NULL;
-	hM->hashTableOfOccupied = HashsetInit(INITIAL_HASHTABLE_SIZE);
+	hM->hashMapOfOccupied = HashmapInit(INITIAL_HASHTABLE_SIZE);
 	hM->malloc = Malloc;
 	hM->free = Free;
 
+	free(initialMemoryBlock);
 	return hM;
 }
 
@@ -36,18 +37,23 @@ void* Malloc(struct Heap_manager** hManager, int nbytes)
 {
 	H_MANAGER* hM = *hManager;
 	// Define new memory block data
-	MEMORY_BLOCK* mB = (MEMORY_BLOCK*)malloc(sizeof(MEMORY_BLOCK));
+	HEAP_BLOCK* mB = (HEAP_BLOCK*)malloc(sizeof(HEAP_BLOCK));
 	mB->dataPtr = NULL;
 	mB->dataSize = nbytes;
 	mB->mark = false;
 
-	// Lock while searching a block position and addition to hashset
+	// Lock while searching a block position and addition to hashmap
 	WaitForSingleObject(hM->mallocSemaphore, INFINITE);
 
 	// Recalculate new position for free block and its size 
 	NODE* firstFittingNode = hM->listOfFree;
 	if (ListCount(&hM->listOfFree) == 1)
 	{
+		if (nbytes > firstFittingNode->blockInfo.dataSize)
+		{
+			// Not enough memory
+			return NULL;
+		}
 		mB->dataPtr = firstFittingNode->blockInfo.dataPtr;
 		firstFittingNode->blockInfo.dataPtr = (char*)(firstFittingNode->blockInfo.dataPtr) + nbytes;
 		firstFittingNode->blockInfo.dataSize = firstFittingNode->blockInfo.dataSize - nbytes;
@@ -63,6 +69,7 @@ void* Malloc(struct Heap_manager** hManager, int nbytes)
 				//collect
 				// after collect, start again
 				// if it fails again, heap is full
+				return NULL;
 			}
 			previous = firstFittingNode;
 			firstFittingNode = firstFittingNode->next;
@@ -91,7 +98,7 @@ void* Malloc(struct Heap_manager** hManager, int nbytes)
 
 	// Add new node in list of occupied nodes
 	// mB argument will be a copy of mB
-	HashsetAdd(&hM->hashTableOfOccupied, mB);
+	HashmapAdd(&hM->hashMapOfOccupied, mB);
 
 	// Free the semaphore so other threads can malloc
 	ReleaseSemaphore(hM->mallocSemaphore, 1, NULL);
@@ -103,7 +110,7 @@ void Free(struct Heap_manager** hManager, void** ptr)
 {
 	H_MANAGER* hM = *hManager;
 
-	NODE* nodeToFree = HashsetRemove(&hM->hashTableOfOccupied, *ptr);
+	NODE* nodeToFree = HashmapRemove(&hM->hashMapOfOccupied, *ptr);
 
 	// Search where to put the block back
 	// Try to find the between

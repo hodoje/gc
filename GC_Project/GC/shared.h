@@ -1,8 +1,10 @@
 #pragma once
 #include <Windows.h>
+#include <processthreadsapi.h>
+#include <TlHelp32.h>
 #include "structs.h"
 #include "list.h"
-#include "hashset.h"
+#include "hashmap.h"
 
 #ifndef SHARED_H
 #define SHARED_H
@@ -20,7 +22,7 @@ typedef struct Heap_manager {
 	char* heapStart;
 	int heapSize;
 	NODE* listOfFree;
-	HASHSET* hashTableOfOccupied;
+	HASHMAP* hashMapOfOccupied;
 	void(*free)(struct Heap_manager**, void**);
 	void*(*malloc)(struct Heap_manager**, int);
 	HANDLE mallocSemaphore;
