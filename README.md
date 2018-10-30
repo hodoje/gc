@@ -1,5 +1,5 @@
 # gc
-College project - garbage collector for C
+College project - automatic garbage collector for C
 
 Project text:
   - It is needed to implement a heap manager that is based on mark-sweep algorithm for automatic memory management.
