@@ -11,6 +11,7 @@ Project text:
   - Work is done in a team of two.
 
 **NOTES:**
+  - Using .cpp files for source files because of Visual C++ compiler.
   - Because of some issues in team communication and other problems the project is not done to the end.
   - OS didn't not allow reading of thread stack locations. So simulation of roots is done.
   - Heap is not segment but fixed to 100MBs (last known size for testing purposes.  
